@@ -1,5 +1,7 @@
 
-
+/************************************************/
+/******** Marginal Structure Model **************/
+/************************************************/
 
 %let tdvar=	 f_invisit f_ervisit; /* Time-Varing Variables */
 
@@ -19,13 +21,12 @@ set n.all_bipolar;
 if f_invisit=1 then f_incost_new = f_incost;
 if f_MH_invisit=1 then f_MH_incost_new = f_MH_incost;
 run;
+
 proc sort data=all_bipolar; by enrolid vis; run;
 
 data MSM;
-merge 
-		all_bipolar(in=a keep=enrolid vis   cohort &outvar &fxvar where=(vis>1))
-		all_bipolar(in=b keep=enrolid vis_p cohort &tdvar  rename=(vis_p=vis cohort=cohort_p f_invisit=f_invisit_p f_ervisit=f_ervisit_p));
-
+merge all_bipolar(in=a keep=enrolid vis   cohort &outvar &fxvar where=(vis>1))
+      all_bipolar(in=b keep=enrolid vis_p cohort &tdvar  rename=(vis_p=vis cohort=cohort_p f_invisit=f_invisit_p f_ervisit=f_ervisit_p));
 by enrolid vis;
 if a and b;
 
@@ -98,12 +99,12 @@ run;
 	
 data final;
 retain variable;
-merge 	OUTPUT(where=(cohort_p='0Lurasidone') 	rename=(MU=MU0 STDERRMU=STDERRMU0 ProbZ=ProbZ0)) 
+merge 	OUTPUT(where=(cohort_p='0Lurasidone') 		rename=(MU=MU0 STDERRMU=STDERRMU0 ProbZ=ProbZ0)) 
 		OUTPUT(where=(cohort_p='1Quetiapine') 	rename=(MU=MU1 STDERRMU=STDERRMU1 ProbZ=ProbZ1)) 
 		OUTPUT(where=(cohort_p='2Risperidone') 	rename=(MU=MU2 STDERRMU=STDERRMU2 ProbZ=ProbZ2)) 
 		OUTPUT(where=(cohort_p='3Aripiprazole') rename=(MU=MU3 STDERRMU=STDERRMU3 ProbZ=ProbZ3)) 
 		OUTPUT(where=(cohort_p='4Olanzapine') 	rename=(MU=MU4 STDERRMU=STDERRMU4 ProbZ=ProbZ4)) 
-		OUTPUT(where=(cohort_p='5No/Mini') 		rename=(MU=MU5 STDERRMU=STDERRMU5 ProbZ=ProbZ5)) 
+		OUTPUT(where=(cohort_p='5No/Mini') 	rename=(MU=MU5 STDERRMU=STDERRMU5 ProbZ=ProbZ5)) 
 		OUTPUT(where=(cohort_p='6Other_Treat') 	rename=(MU=MU6 STDERRMU=STDERRMU6 ProbZ=ProbZ6)) 
 		;
 drop cohort_p;
@@ -115,8 +116,7 @@ run;
 proc append data=final base=&outdata force;
 run;
 
-
-proc export data=&outdata outfile="E:\Yigong Zhou\APs\RESULTS\MSM output\final_method.csv" dbms=csv replace; run;
+proc export data=&outdata outfile="E:\..\final_method.csv" dbms=csv replace; run;
 
 %mend;
 
@@ -143,19 +143,7 @@ proc datasets; delete final_binary;  quit;
 
 %mend;
 %logitmodel(outcome=f_invisit);
-%logitmodel(outcome=f_out_anyvisit);
-%logitmodel(outcome=f_ervisit);
-%logitmodel(outcome=f_officevisit);
-%logitmodel(outcome=f_outotvisit);
-%logitmodel(outcome=f_pharmvisit);
 
-
-%logitmodel(outcome=f_MH_invisit);
-%logitmodel(outcome=f_MH_out_anyvisit);
-%logitmodel(outcome=f_MH_ervisit);
-%logitmodel(outcome=f_MH_officevisit);
-%logitmodel(outcome=f_MH_outotvisit);
-%logitmodel(outcome=f_MH_pharmvisit);
 
 /* Health Care Utlization: # of visit */
 proc datasets; delete final_count;  quit;
@@ -177,20 +165,7 @@ proc datasets; delete final_count;  quit;
 
 %mend;
 %ngmodel(outcome=f_los  );
-%ngmodel(outcome=f_n_invisit  );
-%ngmodel(outcome=f_n_out_anyvisit );
-%ngmodel(outcome=f_n_ervisit);
-%ngmodel(outcome=f_n_officevisit );
-%ngmodel(outcome=f_n_outotvisit  );
-%ngmodel(outcome=f_n_pharmvisit );
 
-%ngmodel(outcome=f_MH_los  );
-%ngmodel(outcome=f_MH_n_invisit  );
-%ngmodel(outcome=f_MH_n_out_anyvisit );
-%ngmodel(outcome=f_MH_n_ervisit);
-%ngmodel(outcome=f_MH_n_officevisit );
-%ngmodel(outcome=f_MH_n_outotvisit  );
-%ngmodel(outcome=f_MH_n_pharmvisit );
 
 
 
@@ -219,26 +194,7 @@ proc datasets; delete final_cost;  quit;
 
 %mend;
 
-%gamodel(outcome=f_incost ); 				 /* Error: Error in computing the variance function.*/
-%gamodel(outcome=f_out_total_cost);          /* Good */
-%gamodel(outcome=f_ercost);  				 /* Warning: Fail to Converge for "some variables"*/
-%gamodel(outcome=f_officecost );			 /* Good */
-%gamodel(outcome=f_outotcost);				 /* Error: Error in computing the variance function.*/
-%gamodel(outcome=f_medical_cost);			 /* Error: Error in computing the variance function.*/
-%gamodel(outcome=f_pharmcost);				 /* Good */
-%gamodel(outcome=f_total_cost);				 /* Error: Error in computing the variance function.*/
-%gamodel(outcome=f_incost_new ); 		     /* Good */ /* Incost for patient who have invisit */
-
-%gamodel(outcome=f_MH_incost ); 			 /* Error: Error in computing the variance function.*/
-%gamodel(outcome=f_MH_out_total_cost);		 /* Good */
-%gamodel(outcome=f_MH_ercost);  			 /* Error: Error in computing the variance function.*/
-%gamodel(outcome=f_MH_officecost );			 /* Good */
-%gamodel(outcome=f_MH_outotcost);			 /* Error: Error in computing the variance function.*/
-%gamodel(outcome=f_MH_medical_cost);		 /* ERROR: Negative variance from user-defined variance function.
-												ERROR: Error in computing the variance function.*/
-%gamodel(outcome=f_MH_pharmcost);			 /* Good */
-%gamodel(outcome=f_MH_total_cost);			 /* ERROR: Termination due to Floating Point Exception*/
-%gamodel(outcome=f_MH_incost_new ); 		 /* Good */ /* MH_incost for patient who have MH_invisit */
+%gamodel(outcome=f_incost );
 
 
 
@@ -432,4 +388,3 @@ estimate "Odds for comed_Antidepressants"   comed_Antidepressants 1/exp;
 estimate "Odds for comed_Anxiolytics" 	  	comed_Anxiolytics 1/exp;
 estimate "Odds for comed_Other"   			comed_Other 1/exp;
 run; 
-
